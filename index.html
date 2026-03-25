@@ -1,0 +1,582 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0" />
+  <title>NomNom</title>
+  <script src="https://telegram.org/js/telegram-web-app.js"></script>
+  <style>
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+      background: var(--tg-theme-bg-color, #fff);
+      color: var(--tg-theme-text-color, #000);
+      min-height: 100vh;
+      padding-bottom: 80px;
+    }
+
+    /* ── HEADER ── */
+    .header {
+      padding: 16px;
+      border-bottom: 0.5px solid rgba(0,0,0,0.1);
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      position: sticky;
+      top: 0;
+      background: var(--tg-theme-bg-color, #fff);
+      z-index: 10;
+    }
+    .header-title { font-size: 20px; font-weight: 600; }
+    .header-count { font-size: 13px; opacity: 0.5; }
+
+    /* ── TABS ── */
+    .tabs {
+      display: flex;
+      overflow-x: auto;
+      gap: 8px;
+      padding: 10px 16px;
+      scrollbar-width: none;
+      border-bottom: 0.5px solid rgba(0,0,0,0.08);
+    }
+    .tabs::-webkit-scrollbar { display: none; }
+    .tab {
+      flex-shrink: 0;
+      padding: 6px 14px;
+      border-radius: 999px;
+      font-size: 13px;
+      font-weight: 500;
+      background: rgba(0,0,0,0.06);
+      color: var(--tg-theme-text-color, #000);
+      cursor: pointer;
+      border: none;
+    }
+    .tab.active {
+      background: var(--tg-theme-button-color, #000);
+      color: var(--tg-theme-button-text-color, #fff);
+    }
+
+    /* ── SEARCH ── */
+    .search-wrap { padding: 12px 16px; }
+    .search-input {
+      width: 100%;
+      padding: 10px 14px;
+      border-radius: 12px;
+      border: 0.5px solid rgba(0,0,0,0.12);
+      background: rgba(0,0,0,0.04);
+      font-size: 14px;
+      color: var(--tg-theme-text-color, #000);
+      outline: none;
+    }
+    .search-input::placeholder { opacity: 0.4; }
+
+    /* ── RECIPE LIST ── */
+    .recipe-list { padding: 0 16px; }
+    .section-label {
+      font-size: 11px;
+      font-weight: 600;
+      opacity: 0.4;
+      text-transform: uppercase;
+      letter-spacing: 0.6px;
+      margin: 12px 0 8px;
+    }
+    .recipe-card {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      padding: 12px;
+      border-radius: 14px;
+      border: 0.5px solid rgba(0,0,0,0.08);
+      margin-bottom: 8px;
+      cursor: pointer;
+      background: var(--tg-theme-bg-color, #fff);
+      transition: opacity 0.15s;
+    }
+    .recipe-card:active { opacity: 0.7; }
+    .recipe-emoji {
+      width: 48px;
+      height: 48px;
+      border-radius: 12px;
+      background: rgba(0,0,0,0.05);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 26px;
+      flex-shrink: 0;
+    }
+    .recipe-info { flex: 1; }
+    .recipe-name { font-size: 15px; font-weight: 500; margin-bottom: 3px; }
+    .recipe-meta { font-size: 12px; opacity: 0.5; }
+    .recipe-badge {
+      font-size: 11px;
+      padding: 2px 8px;
+      border-radius: 999px;
+      background: rgba(0,0,0,0.06);
+      margin-top: 4px;
+      display: inline-block;
+    }
+
+    /* ── FAB ── */
+    .fab {
+      position: fixed;
+      bottom: 24px;
+      right: 20px;
+      width: 52px;
+      height: 52px;
+      border-radius: 50%;
+      background: var(--tg-theme-button-color, #000);
+      color: var(--tg-theme-button-text-color, #fff);
+      font-size: 26px;
+      border: none;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      box-shadow: 0 4px 16px rgba(0,0,0,0.18);
+      z-index: 100;
+    }
+
+    /* ── SCREENS ── */
+    .screen { display: none; }
+    .screen.active { display: block; }
+
+    /* ── DETAIL ── */
+    .detail-header {
+      padding: 12px 16px;
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      border-bottom: 0.5px solid rgba(0,0,0,0.08);
+      position: sticky;
+      top: 0;
+      background: var(--tg-theme-bg-color, #fff);
+      z-index: 10;
+    }
+    .back-btn {
+      background: none;
+      border: none;
+      font-size: 15px;
+      opacity: 0.6;
+      cursor: pointer;
+      color: var(--tg-theme-text-color, #000);
+      padding: 4px 0;
+    }
+    .detail-content { padding: 16px; }
+    .detail-emoji { font-size: 64px; text-align: center; padding: 16px 0 8px; }
+    .detail-title { font-size: 22px; font-weight: 600; text-align: center; margin-bottom: 6px; }
+    .detail-badge-wrap { text-align: center; margin-bottom: 20px; }
+
+    .block {
+      background: rgba(0,0,0,0.04);
+      border-radius: 14px;
+      padding: 14px;
+      margin-bottom: 12px;
+    }
+    .block-title { font-size: 12px; font-weight: 600; opacity: 0.4; text-transform: uppercase; letter-spacing: 0.5px; margin-bottom: 10px; }
+    .ing-row {
+      font-size: 14px;
+      padding: 6px 0;
+      border-bottom: 0.5px solid rgba(0,0,0,0.07);
+    }
+    .ing-row:last-child { border-bottom: none; padding-bottom: 0; }
+    .step-row { display: flex; gap: 10px; margin-bottom: 10px; }
+    .step-row:last-child { margin-bottom: 0; }
+    .step-num {
+      width: 24px;
+      height: 24px;
+      border-radius: 50%;
+      background: var(--tg-theme-button-color, #000);
+      color: var(--tg-theme-button-text-color, #fff);
+      font-size: 12px;
+      font-weight: 600;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      flex-shrink: 0;
+      margin-top: 1px;
+    }
+    .step-text { font-size: 14px; line-height: 1.5; }
+
+    .btn {
+      width: 100%;
+      padding: 14px;
+      border-radius: 14px;
+      font-size: 15px;
+      font-weight: 500;
+      cursor: pointer;
+      border: 0.5px solid rgba(0,0,0,0.12);
+      background: transparent;
+      color: var(--tg-theme-text-color, #000);
+      margin-bottom: 8px;
+    }
+    .btn.primary {
+      background: var(--tg-theme-button-color, #000);
+      color: var(--tg-theme-button-text-color, #fff);
+      border-color: transparent;
+    }
+    .btn.danger { color: #e74c3c; border-color: rgba(231,76,60,0.2); }
+
+    /* ── ADD FORM ── */
+    .form-group { margin-bottom: 14px; }
+    .form-label { font-size: 13px; font-weight: 500; opacity: 0.6; margin-bottom: 6px; display: block; }
+    .form-input, .form-textarea {
+      width: 100%;
+      padding: 12px 14px;
+      border-radius: 12px;
+      border: 0.5px solid rgba(0,0,0,0.12);
+      background: rgba(0,0,0,0.04);
+      font-size: 14px;
+      color: var(--tg-theme-text-color, #000);
+      font-family: inherit;
+      outline: none;
+    }
+    .form-textarea { min-height: 80px; resize: vertical; }
+    .cat-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px; }
+    .cat-btn {
+      padding: 10px 6px;
+      border-radius: 12px;
+      border: 0.5px solid rgba(0,0,0,0.12);
+      background: rgba(0,0,0,0.04);
+      font-size: 13px;
+      cursor: pointer;
+      text-align: center;
+      color: var(--tg-theme-text-color, #000);
+    }
+    .cat-btn.selected {
+      background: var(--tg-theme-button-color, #000);
+      color: var(--tg-theme-button-text-color, #fff);
+      border-color: transparent;
+    }
+
+    /* ── SHOPPING ── */
+    .shop-item {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      padding: 10px 0;
+      border-bottom: 0.5px solid rgba(0,0,0,0.07);
+    }
+    .shop-item:last-child { border-bottom: none; }
+    .shop-check {
+      width: 22px;
+      height: 22px;
+      border-radius: 50%;
+      border: 1.5px solid rgba(0,0,0,0.2);
+      flex-shrink: 0;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 12px;
+    }
+    .shop-check.done {
+      background: #27ae60;
+      border-color: #27ae60;
+      color: #fff;
+    }
+    .shop-text { font-size: 14px; }
+    .shop-text.done { text-decoration: line-through; opacity: 0.4; }
+
+    /* ── EMPTY STATE ── */
+    .empty {
+      text-align: center;
+      padding: 60px 20px;
+      opacity: 0.4;
+    }
+    .empty-icon { font-size: 48px; margin-bottom: 12px; }
+    .empty-text { font-size: 15px; }
+  </style>
+</head>
+<body>
+
+<!-- ══════════════ ГЛАВНЫЙ ЭКРАН ══════════════ -->
+<div id="screen-main" class="screen active">
+  <div class="header">
+    <span class="header-title">🍽 NomNom</span>
+    <span class="header-count" id="recipe-count"></span>
+  </div>
+  <div class="tabs" id="tabs">
+    <button class="tab active" data-cat="all" onclick="filterTab(this)">Все</button>
+    <button class="tab" data-cat="Завтрак" onclick="filterTab(this)">Завтрак</button>
+    <button class="tab" data-cat="Обед" onclick="filterTab(this)">Обед</button>
+    <button class="tab" data-cat="Ужин" onclick="filterTab(this)">Ужин</button>
+    <button class="tab" data-cat="Десерт" onclick="filterTab(this)">Десерт</button>
+    <button class="tab" data-cat="Другое" onclick="filterTab(this)">Другое</button>
+  </div>
+  <div class="search-wrap">
+    <input class="search-input" type="text" placeholder="Поиск по ингредиентам..." id="search-input" oninput="handleSearch()" />
+  </div>
+  <div class="recipe-list" id="recipe-list"></div>
+  <button class="fab" onclick="showAdd()">+</button>
+</div>
+
+<!-- ══════════════ ДЕТАЛЬНЫЙ ЭКРАН ══════════════ -->
+<div id="screen-detail" class="screen">
+  <div class="detail-header">
+    <button class="back-btn" onclick="showMain()">← Назад</button>
+  </div>
+  <div class="detail-content" id="detail-content"></div>
+</div>
+
+<!-- ══════════════ ДОБАВИТЬ РЕЦЕПТ ══════════════ -->
+<div id="screen-add" class="screen">
+  <div class="detail-header">
+    <button class="back-btn" onclick="showMain()">✕ Отмена</button>
+    <span style="font-size:16px;font-weight:600;margin-left:8px;">Новый рецепт</span>
+  </div>
+  <div style="padding:16px;">
+    <div class="form-group">
+      <label class="form-label">Название блюда</label>
+      <input class="form-input" id="add-name" type="text" placeholder="Паста карбонара..." />
+    </div>
+    <div class="form-group">
+      <label class="form-label">Ингредиенты (через запятую)</label>
+      <textarea class="form-textarea" id="add-ingredients" placeholder="курица 500г, чеснок 3 зубчика, масло 2 ст.л."></textarea>
+    </div>
+    <div class="form-group">
+      <label class="form-label">Шаги приготовления (каждый с новой строки)</label>
+      <textarea class="form-textarea" id="add-steps" style="min-height:100px;" placeholder="1. Нарезать курицу&#10;2. Обжарить на масле&#10;3. Добавить специи"></textarea>
+    </div>
+    <div class="form-group">
+      <label class="form-label">Категория</label>
+      <div class="cat-grid">
+        <button class="cat-btn" onclick="selectCat(this)" data-cat="Завтрак">🍳 Завтрак</button>
+        <button class="cat-btn" onclick="selectCat(this)" data-cat="Обед">🥗 Обед</button>
+        <button class="cat-btn" onclick="selectCat(this)" data-cat="Ужин">🍽 Ужин</button>
+        <button class="cat-btn" onclick="selectCat(this)" data-cat="Десерт">🍰 Десерт</button>
+        <button class="cat-btn" onclick="selectCat(this)" data-cat="Напиток">🥤 Напиток</button>
+        <button class="cat-btn" onclick="selectCat(this)" data-cat="Другое">📦 Другое</button>
+      </div>
+    </div>
+    <button class="btn primary" onclick="saveRecipe()">Сохранить рецепт</button>
+  </div>
+</div>
+
+<!-- ══════════════ СПИСОК ПОКУПОК ══════════════ -->
+<div id="screen-shop" class="screen">
+  <div class="detail-header">
+    <button class="back-btn" onclick="goBackFromShop()">← Назад</button>
+    <span style="font-size:16px;font-weight:600;margin-left:8px;" id="shop-title">Список покупок</span>
+  </div>
+  <div style="padding:16px;">
+    <div class="block">
+      <div class="block-title">Ингредиенты</div>
+      <div id="shop-list"></div>
+    </div>
+    <button class="btn" onclick="clearChecked()">Убрать отмеченные</button>
+  </div>
+</div>
+
+<script>
+  const tg = window.Telegram?.WebApp;
+  if (tg) { tg.ready(); tg.expand(); }
+
+  const STORAGE_KEY = 'nomnom_recipes';
+  let recipes = [];
+  let currentFilter = 'all';
+  let currentRecipeId = null;
+  let shopFromDetail = false;
+
+  const CATEGORY_EMOJI = {
+    'Завтрак': '🍳', 'Обед': '🥗', 'Ужин': '🍽',
+    'Десерт': '🍰', 'Напиток': '🥤', 'Другое': '📦'
+  };
+
+  function load() {
+    try {
+      const raw = localStorage.getItem(STORAGE_KEY);
+      recipes = raw ? JSON.parse(raw) : [];
+    } catch { recipes = []; }
+  }
+
+  function save() {
+    localStorage.setItem(STORAGE_KEY, JSON.stringify(recipes));
+  }
+
+  function nextId() {
+    return recipes.length ? Math.max(...recipes.map(r => r.id)) + 1 : 1;
+  }
+
+  function showScreen(id) {
+    document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
+    document.getElementById(id).classList.add('active');
+    window.scrollTo(0, 0);
+  }
+
+  function showMain() { renderList(); showScreen('screen-main'); }
+  function showAdd() { clearForm(); showScreen('screen-add'); }
+
+  function goBackFromShop() {
+    if (shopFromDetail && currentRecipeId !== null) {
+      showDetail(currentRecipeId);
+    } else {
+      showMain();
+    }
+  }
+
+  function filterTab(el) {
+    document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
+    el.classList.add('active');
+    currentFilter = el.dataset.cat;
+    renderList();
+  }
+
+  function handleSearch() {
+    renderList();
+  }
+
+  function renderList() {
+    const query = document.getElementById('search-input').value.toLowerCase().trim();
+    let list = [...recipes];
+
+    if (currentFilter !== 'all') {
+      list = list.filter(r => r.category === currentFilter);
+    }
+
+    if (query) {
+      list = list.filter(r =>
+        r.ingredients.toLowerCase().includes(query) ||
+        r.name.toLowerCase().includes(query)
+      );
+    }
+
+    const container = document.getElementById('recipe-list');
+    document.getElementById('recipe-count').textContent = recipes.length + ' рецептов';
+
+    if (list.length === 0) {
+      container.innerHTML = `<div class="empty"><div class="empty-icon">🍽</div><div class="empty-text">${recipes.length === 0 ? 'Добавь первый рецепт!' : 'Ничего не найдено'}</div></div>`;
+      return;
+    }
+
+    container.innerHTML = `<div class="section-label">${query ? 'Результаты поиска' : currentFilter === 'all' ? 'Все рецепты' : currentFilter}</div>` +
+      list.map(r => `
+        <div class="recipe-card" onclick="showDetail(${r.id})">
+          <div class="recipe-emoji">${CATEGORY_EMOJI[r.category] || '🍽'}</div>
+          <div class="recipe-info">
+            <div class="recipe-name">${r.name}</div>
+            <div class="recipe-meta">${r.ingredients.split(',').length} ингредиентов</div>
+            <div class="recipe-badge">${r.category}</div>
+          </div>
+        </div>
+      `).join('');
+  }
+
+  function showDetail(id) {
+    currentRecipeId = id;
+    const r = recipes.find(x => x.id === id);
+    if (!r) return;
+
+    const ings = r.ingredients.split(',').map(i => i.trim()).filter(Boolean);
+    const steps = r.steps.split('\n').map(s => s.trim()).filter(Boolean);
+
+    document.getElementById('detail-content').innerHTML = `
+      <div class="detail-emoji">${CATEGORY_EMOJI[r.category] || '🍽'}</div>
+      <div class="detail-title">${r.name}</div>
+      <div class="detail-badge-wrap"><span class="recipe-badge">${r.category}</span></div>
+
+      <div class="block">
+        <div class="block-title">Ингредиенты</div>
+        ${ings.map(i => `<div class="ing-row">${i}</div>`).join('')}
+      </div>
+
+      <div class="block">
+        <div class="block-title">Приготовление</div>
+        ${steps.map((s, i) => `
+          <div class="step-row">
+            <div class="step-num">${i+1}</div>
+            <div class="step-text">${s.replace(/^\d+[\.\)]\s*/, '')}</div>
+          </div>
+        `).join('')}
+      </div>
+
+      <button class="btn primary" onclick="showShop(${r.id})">🛒 Список покупок</button>
+      <button class="btn danger" onclick="deleteRecipe(${r.id})">Удалить рецепт</button>
+    `;
+
+    showScreen('screen-detail');
+  }
+
+  function deleteRecipe(id) {
+    if (!confirm('Удалить этот рецепт?')) return;
+    recipes = recipes.filter(r => r.id !== id);
+    save();
+    showMain();
+  }
+
+  function showShop(id) {
+    shopFromDetail = true;
+    currentRecipeId = id;
+    const r = recipes.find(x => x.id === id);
+    if (!r) return;
+
+    const ings = r.ingredients.split(',').map(i => i.trim()).filter(Boolean);
+    document.getElementById('shop-title').textContent = r.name;
+
+    document.getElementById('shop-list').innerHTML = ings.map((ing, i) => `
+      <div class="shop-item" id="shop-${i}">
+        <div class="shop-check" onclick="toggleCheck(${i})" id="check-${i}"></div>
+        <div class="shop-text" id="shoptext-${i}">${ing}</div>
+      </div>
+    `).join('');
+
+    showScreen('screen-shop');
+  }
+
+  function toggleCheck(i) {
+    const check = document.getElementById('check-' + i);
+    const text = document.getElementById('shoptext-' + i);
+    check.classList.toggle('done');
+    text.classList.toggle('done');
+    if (check.classList.contains('done')) check.textContent = '✓';
+    else check.textContent = '';
+  }
+
+  function clearChecked() {
+    document.querySelectorAll('.shop-check.done').forEach(el => {
+      const i = el.id.replace('check-', '');
+      document.getElementById('shop-' + i).remove();
+    });
+  }
+
+  function clearForm() {
+    document.getElementById('add-name').value = '';
+    document.getElementById('add-ingredients').value = '';
+    document.getElementById('add-steps').value = '';
+    document.querySelectorAll('.cat-btn').forEach(b => b.classList.remove('selected'));
+    selectedCat = '';
+  }
+
+  let selectedCat = '';
+  function selectCat(el) {
+    document.querySelectorAll('.cat-btn').forEach(b => b.classList.remove('selected'));
+    el.classList.add('selected');
+    selectedCat = el.dataset.cat;
+  }
+
+  function saveRecipe() {
+    const name = document.getElementById('add-name').value.trim();
+    const ingredients = document.getElementById('add-ingredients').value.trim();
+    const steps = document.getElementById('add-steps').value.trim();
+
+    if (!name) { alert('Введи название блюда'); return; }
+    if (!ingredients) { alert('Добавь ингредиенты'); return; }
+    if (!steps) { alert('Опиши шаги приготовления'); return; }
+    if (!selectedCat) { alert('Выбери категорию'); return; }
+
+    if (recipes.find(r => r.name.toLowerCase() === name.toLowerCase())) {
+      alert('Рецепт с таким названием уже есть!');
+      return;
+    }
+
+    recipes.push({ id: nextId(), name, ingredients, steps, category: selectedCat });
+    save();
+    showMain();
+    if (tg) tg.showPopup({ message: '✅ Рецепт сохранён!' });
+  }
+
+  load();
+  renderList();
+</script>
+</body>
+</html>
