@@ -377,9 +377,9 @@
 
 <script>
   const tg = window.Telegram?.WebApp;
+  const API_URL = 'RAILWAY_URL_PLACEHOLDER';
   if (tg) { tg.ready(); tg.expand(); }
 
-  const STORAGE_KEY = 'nomnom_recipes';
   let recipes = [];
   let currentFilter = 'all';
   let currentRecipeId = null;
@@ -391,19 +391,11 @@
     'Десерты': '🍰', 'Заготовки': '🫙', 'Другое': '📦'
   };
 
-  function load() {
+  async function load() {
     try {
-      const raw = localStorage.getItem(STORAGE_KEY);
-      recipes = raw ? JSON.parse(raw) : [];
+      const res = await fetch(API_URL + '/recipes');
+      recipes = await res.json();
     } catch { recipes = []; }
-  }
-
-  function save() {
-    localStorage.setItem(STORAGE_KEY, JSON.stringify(recipes));
-  }
-
-  function nextId() {
-    return recipes.length ? Math.max(...recipes.map(r => r.id)) + 1 : 1;
   }
 
   function showScreen(id) {
@@ -505,11 +497,13 @@
     showScreen('screen-detail');
   }
 
-  function deleteRecipe(id) {
+  async function deleteRecipe(id) {
     if (!confirm('Удалить этот рецепт?')) return;
-    recipes = recipes.filter(r => r.id !== id);
-    save();
-    showMain();
+    try {
+      await fetch(API_URL + '/recipes/' + id, { method: 'DELETE' });
+      await load();
+      showMain();
+    } catch { alert('Ошибка удаления'); }
   }
 
   function showShop(id) {
@@ -562,7 +556,7 @@
     selectedCat = el.dataset.cat;
   }
 
-  function saveRecipe() {
+  async function saveRecipe() {
     const name = document.getElementById('add-name').value.trim();
     const ingredients = document.getElementById('add-ingredients').value.trim();
     const steps = document.getElementById('add-steps').value.trim();
@@ -572,19 +566,21 @@
     if (!steps) { alert('Опиши шаги приготовления'); return; }
     if (!selectedCat) { alert('Выбери категорию'); return; }
 
-    if (recipes.find(r => r.name.toLowerCase() === name.toLowerCase())) {
-      alert('Рецепт с таким названием уже есть!');
-      return;
-    }
-
-    recipes.push({ id: nextId(), name, ingredients, steps, category: selectedCat });
-    save();
-    showMain();
-    if (tg) tg.showPopup({ message: '✅ Рецепт сохранён!' });
+    try {
+      const res = await fetch(API_URL + '/recipes', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ name, ingredients, steps, category: selectedCat })
+      });
+      if (res.status === 409) { alert('Рецепт с таким названием уже есть!'); return; }
+      if (!res.ok) { alert('Ошибка сохранения'); return; }
+      await load();
+      showMain();
+      if (tg) tg.showPopup({ message: '✅ Рецепт сохранён!' });
+    } catch { alert('Ошибка соединения'); }
   }
 
-  load();
-  renderList();
+  load().then(() => renderList());
 </script>
 </body>
 </html>
