@@ -298,11 +298,14 @@
   </div>
   <div class="tabs" id="tabs">
     <button class="tab active" data-cat="all" onclick="filterTab(this)">Все</button>
-    <button class="tab" data-cat="Завтрак" onclick="filterTab(this)">Завтрак</button>
-    <button class="tab" data-cat="Обед" onclick="filterTab(this)">Обед</button>
-    <button class="tab" data-cat="Ужин" onclick="filterTab(this)">Ужин</button>
-    <button class="tab" data-cat="Десерт" onclick="filterTab(this)">Десерт</button>
-    <button class="tab" data-cat="Другое" onclick="filterTab(this)">Другое</button>
+    <button class="tab" data-cat="Завтрак" onclick="filterTab(this)">🍳 Завтрак</button>
+    <button class="tab" data-cat="Супы" onclick="filterTab(this)">🍜 Супы</button>
+    <button class="tab" data-cat="Салаты" onclick="filterTab(this)">🥗 Салаты</button>
+    <button class="tab" data-cat="Основное" onclick="filterTab(this)">🥦 Основное</button>
+    <button class="tab" data-cat="Паста" onclick="filterTab(this)">🍝 Паста</button>
+    <button class="tab" data-cat="Рыба" onclick="filterTab(this)">🐟 Рыба</button>
+    <button class="tab" data-cat="Десерты" onclick="filterTab(this)">🍰 Десерты</button>
+    <button class="tab" data-cat="Другое" onclick="filterTab(this)">📦 Другое</button>
   </div>
   <div class="search-wrap">
     <input class="search-input" type="text" placeholder="Поиск по ингредиентам..." id="search-input" oninput="handleSearch()" />
@@ -331,21 +334,23 @@
       <input class="form-input" id="add-name" type="text" placeholder="Паста карбонара..." />
     </div>
     <div class="form-group">
-      <label class="form-label">Ингредиенты (каждый с новой строки)</label>
-      <textarea class="form-textarea" id="add-ingredients" placeholder="курица 500г&#10;чеснок 3 зубчика&#10;масло 2 ст.л."></textarea>
+      <label class="form-label">Ингредиенты</label>
+      <textarea class="form-textarea" id="add-ingredients" placeholder="тофу 200г&#10;помидоры 3 шт.&#10;чеснок 3 зубчика"></textarea>
     </div>
     <div class="form-group">
-      <label class="form-label">Шаги приготовления (каждый с новой строки)</label>
+      <label class="form-label">Шаги приготовления</label>
       <textarea class="form-textarea" id="add-steps" style="min-height:100px;" placeholder="1. Нарезать курицу&#10;2. Обжарить на масле&#10;3. Добавить специи"></textarea>
     </div>
     <div class="form-group">
       <label class="form-label">Категория</label>
       <div class="cat-grid">
         <button class="cat-btn" onclick="selectCat(this)" data-cat="Завтрак">🍳 Завтрак</button>
-        <button class="cat-btn" onclick="selectCat(this)" data-cat="Обед">🥗 Обед</button>
-        <button class="cat-btn" onclick="selectCat(this)" data-cat="Ужин">🍽 Ужин</button>
-        <button class="cat-btn" onclick="selectCat(this)" data-cat="Десерт">🍰 Десерт</button>
-        <button class="cat-btn" onclick="selectCat(this)" data-cat="Напиток">🥤 Напиток</button>
+        <button class="cat-btn" onclick="selectCat(this)" data-cat="Супы">🍜 Супы</button>
+        <button class="cat-btn" onclick="selectCat(this)" data-cat="Салаты">🥗 Салаты</button>
+        <button class="cat-btn" onclick="selectCat(this)" data-cat="Основное">🥦 Основное</button>
+        <button class="cat-btn" onclick="selectCat(this)" data-cat="Паста">🍝 Паста</button>
+        <button class="cat-btn" onclick="selectCat(this)" data-cat="Рыба">🐟 Рыба</button>
+        <button class="cat-btn" onclick="selectCat(this)" data-cat="Десерты">🍰 Десерты</button>
         <button class="cat-btn" onclick="selectCat(this)" data-cat="Другое">📦 Другое</button>
       </div>
     </div>
@@ -379,8 +384,9 @@
   let shopFromDetail = false;
 
   const CATEGORY_EMOJI = {
-    'Завтрак': '🍳', 'Обед': '🥗', 'Ужин': '🍽',
-    'Десерт': '🍰', 'Напиток': '🥤', 'Другое': '📦'
+    'Завтрак': '🍳', 'Супы': '🍜', 'Салаты': '🥗',
+    'Основное': '🥦', 'Паста': '🍝', 'Рыба': '🐟',
+    'Десерты': '🍰', 'Заготовки': '🫙', 'Другое': '📦'
   };
 
   function load() {
