@@ -331,8 +331,8 @@
       <input class="form-input" id="add-name" type="text" placeholder="Паста карбонара..." />
     </div>
     <div class="form-group">
-      <label class="form-label">Ингредиенты</label>
-      <textarea class="form-textarea" id="add-ingredients" placeholder="тофу 500г&#10;чеснок 3 зубчика&#10;масло 2 ст.л."></textarea>
+      <label class="form-label">Ингредиенты (каждый с новой строки)</label>
+      <textarea class="form-textarea" id="add-ingredients" placeholder="курица 500г&#10;чеснок 3 зубчика&#10;масло 2 ст.л."></textarea>
     </div>
     <div class="form-group">
       <label class="form-label">Шаги приготовления (каждый с новой строки)</label>
@@ -467,8 +467,7 @@
     const r = recipes.find(x => x.id === id);
     if (!r) return;
 
-    const ings = r.ingredients.split('
-').map(i => i.trim()).filter(Boolean);
+    const ings = r.ingredients.split('\n').map(i => i.trim()).filter(Boolean);
     const steps = r.steps.split('\n').map(s => s.trim()).filter(Boolean);
 
     document.getElementById('detail-content').innerHTML = `
@@ -511,8 +510,7 @@
     const r = recipes.find(x => x.id === id);
     if (!r) return;
 
-    const ings = r.ingredients.split('
-').map(i => i.trim()).filter(Boolean);
+    const ings = r.ingredients.split('\n').map(i => i.trim()).filter(Boolean);
     document.getElementById('shop-title').textContent = r.name;
 
     document.getElementById('shop-list').innerHTML = ings.map((ing, i) => `
